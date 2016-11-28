@@ -120,6 +120,25 @@ has locate_comment => (
 	default => 0,
 );
 
+=attr remove_comment
+
+A boolean value to control if the C<# AUTHORITY> comment should be removed when
+it is found and C<locate_comment> is set to true. When this is false, the comment
+is retained at the end of the inserted  C<our $AUTHORITY = 'cpan:PAUSEID';>
+statement. When true, the comment will be deleted.
+
+Defaults to false.
+
+NOTE: This method has no effect if C<locate_comment> is not set to true.
+
+=cut
+
+has remove_comment => (
+	is => 'ro',
+	isa => 'Bool',
+	default => 0,
+);
+
 =attr authority_style
 
 A value to control the type of the $AUTHORITY declaration. There are two styles: 'pkg' or 'our'. In the past
@@ -261,7 +280,10 @@ sub _replace_authority_comment {
 	my ( $self, $file, $line, $ws, $comment ) = @_ ;
 	$self->log_debug( [ 'adding $AUTHORITY assignment to line %d in %s', $line->line_number, $file->name ] );
 	$line->set_content(
-			$self->_template_our_authority({ whitespace => $ws, authority => $self->authority, comment => $comment })
+			$self->_template_our_authority({
+				whitespace => $ws, authority => $self->authority,
+				comment => ($self->remove_comment ? '' : $comment),
+			}),
 	);
 	return;
 }
